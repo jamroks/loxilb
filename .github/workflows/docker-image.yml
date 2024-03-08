@@ -9,6 +9,9 @@ on:
         description: 'Tag Name'     
         required: true
        # default: 'latest'
+      archName:
+        description: architecture must be one of `arm` or `amd`
+        required: false
 
 jobs:
 
@@ -38,6 +41,12 @@ jobs:
     - name: Build the loxilb Docker image with given tag
       if: github.event.inputs.tagName != ''
       run: docker build . --tag ghcr.io/jamroks/loxilb:${{ github.event.inputs.tagName }}
+
+    - name: Build the loxilb ARM Docker image with given tag
+      if: |
+          github.event.inputs.tagName != ''
+          && github.event.inputs.archName == 'arm'
+      run: docker buildx build --platform linux/arm64 --tag ghcr.io/jamroks/loxilb-${{ github.event.inputs.archName }}:${{ github.event.inputs.tagName }} .
       
     - name: Run the loxilb docker image to check
       run: docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/jamroks/loxilb:latest
@@ -48,11 +57,12 @@ jobs:
           &&  github.event.inputs.tagName == ''
       run: docker push ghcr.io/jamroks/loxilb:latest
       
-    - name: Publish the loxilb Docker image with given tag
+    - name: Publish the loxilb ARM Docker image with given tag
       if: |
           github.repository == 'jamroks/loxilb'
-          &&  github.event.inputs.tagName != ''
-      run: docker push ghcr.io/jamroks/loxilb:${{ github.event.inputs.tagName }} 
+          &&  github.event.inputs.tagName != '' 
+          && github.event.inputs.archName == 'arm' 
+      run: docker push ghcr.io/jamroks/loxilb-${{ github.event.inputs.archName }}:${{ github.event.inputs.tagName }} 
       
     # This is currently not supported yet for docker packages
     - name: Cleanup old Docker packages
