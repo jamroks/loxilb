@@ -39,7 +39,9 @@ jobs:
       run: docker build . --tag ghcr.io/jamroks/loxilb:latest
       
     - name: Build the loxilb Docker image with given tag
-      if: github.event.inputs.tagName != ''
+      if: |
+          github.event.inputs.tagName != ''
+          && github.event.inputs.archName == 'adm'
       run: docker build . --tag ghcr.io/jamroks/loxilb:${{ github.event.inputs.tagName }}
 
     - name: Build the loxilb ARM Docker image with given tag
